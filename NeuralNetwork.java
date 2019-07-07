@@ -1,50 +1,36 @@
+import java.io.File;
 import java.util.Arrays;
-import java.util.Random;
 
 class NeuralNetwork {
     private Matrix[] weights;
     private Matrix[] biases;
-
+    private int layers;
     private float learningRate;
-
-    private float trainingSets[][];
-    private float targets[][];
-    private int trainingLength;
-
-    private int length;
 
     NeuralNetwork(int inputNodes, int hiddenLayersNodes[], int outputNodes, float learningRate) {
         this.learningRate = learningRate;
-        this.length = hiddenLayersNodes.length;
+        this.layers = hiddenLayersNodes.length;
 
-        this.weights = new Matrix[length + 1];
-        this.biases = new Matrix[length + 1];
+        this.weights = new Matrix[layers + 1];
+        this.biases = new Matrix[layers + 1];
 
         weights[0] = new Matrix(hiddenLayersNodes[0], inputNodes);
-        weights[length] = new Matrix(outputNodes, hiddenLayersNodes[length - 1]);
+        weights[layers] = new Matrix(outputNodes, hiddenLayersNodes[layers - 1]);
         weights[0].randomize();
-        weights[length].randomize();
+        weights[layers].randomize();
 
         biases[0] = new Matrix(hiddenLayersNodes[0], 1);
-        biases[length] = new Matrix(outputNodes, 1);
+        biases[layers] = new Matrix(outputNodes, 1);
         biases[0].randomize();
-        biases[length].randomize();
+        biases[layers].randomize();
 
-        for (int i = 1; i < length; i++) {
+        for (int i = 1; i < layers; i++) {
             weights[i] = new Matrix(hiddenLayersNodes[i], hiddenLayersNodes[i - 1]);
             biases[i] = new Matrix(hiddenLayersNodes[i], 1);
 
             weights[i].randomize();
             biases[i].randomize();
         }
-    }
-
-    NeuralNetwork(float trainingSets[][], float targets[][], int hiddenLayersNodes[], float learningRate, int trainingLength) {
-        this(trainingSets[0].length, hiddenLayersNodes, targets[0].length, learningRate);
-
-        this.trainingSets = trainingSets;
-        this.targets = targets;
-        this.trainingLength = trainingLength;
     }
 
     float[] feedForward(float input[]) {
@@ -55,14 +41,14 @@ class NeuralNetwork {
         hiddenLayers[0].add(biases[0]);
         hiddenLayers[0].map(Matrix.SIGMOID);
 
-        for (int i = 1; i < length; i++) {
+        for (int i = 1; i < layers; i++) {
             hiddenLayers[i] = Matrix.multiply(weights[i], hiddenLayers[i - 1]);
             hiddenLayers[i].add(biases[i]);
             hiddenLayers[i].map(Matrix.SIGMOID);
         }
 
-        Matrix output = Matrix.multiply(weights[length], hiddenLayers[length - 1]);
-        output.add(biases[length]);
+        Matrix output = Matrix.multiply(weights[layers], hiddenLayers[layers - 1]);
+        output.add(biases[layers]);
         output.map(Matrix.SIGMOID);
 
         return output.toArray();
@@ -74,20 +60,20 @@ class NeuralNetwork {
 
     void train(float input[], float target[]) {
         Matrix inputs = Matrix.fromArray(input);
-        Matrix hiddenLayers[] = new Matrix[length];
+        Matrix hiddenLayers[] = new Matrix[layers];
 
         hiddenLayers[0] = Matrix.multiply(weights[0], inputs);
         hiddenLayers[0].add(biases[0]);
         hiddenLayers[0].map(Matrix.SIGMOID);
 
-        for (int i = 1; i < length; i++) {
+        for (int i = 1; i < layers; i++) {
             hiddenLayers[i] = Matrix.multiply(weights[i], hiddenLayers[i - 1]);
             hiddenLayers[i].add(biases[i]);
             hiddenLayers[i].map(Matrix.SIGMOID);
         }
 
-        Matrix outputs = Matrix.multiply(weights[length], hiddenLayers[length - 1]);
-        outputs.add(biases[length]);
+        Matrix outputs = Matrix.multiply(weights[layers], hiddenLayers[layers - 1]);
+        outputs.add(biases[layers]);
         outputs.map(Matrix.SIGMOID);
 
         Matrix targets = Matrix.fromArray(target);
@@ -98,15 +84,15 @@ class NeuralNetwork {
         gradients.multiply(outputErrors);
         gradients.multiply(learningRate);
 
-        Matrix hiddenLayerTransposed = Matrix.transpose(hiddenLayers[length - 1]);
+        Matrix hiddenLayerTransposed = Matrix.transpose(hiddenLayers[layers - 1]);
         Matrix weightsDeltas = Matrix.multiply(gradients, hiddenLayerTransposed);
 
-        this.weights[length].add(weightsDeltas);
-        this.biases[length].add(gradients);
+        this.weights[layers].add(weightsDeltas);
+        this.biases[layers].add(gradients);
 
         Matrix previousLayerErrors = outputErrors;
 
-        for (int i = length - 1; i >= 0; i--) {
+        for (int i = layers - 1; i >= 0; i--) {
             Matrix weightsTransposed = Matrix.transpose(weights[i + 1]);
             Matrix hiddenErrors = Matrix.multiply(weightsTransposed, previousLayerErrors);
 
@@ -128,15 +114,13 @@ class NeuralNetwork {
         }
     }
 
-    void train() {
-        if (trainingSets != null) {
-            Random random = new Random();
-            for (int i = 0; i < trainingLength; i++) {
-                int r = random.nextInt(trainingSets.length);
-                train(trainingSets[r], targets[r]);
-            }
-        } else {
-            System.out.println("ERROR! CANNOT TRAIN NEURAL NETWORK, NO TRAINING DATA");
+    void export(String directory) {
+        new File(directory).mkdir();
+        for (int i = 0; i < weights.length; i++) {
+            weights[i].exportToFile(directory + "\\weights" + i + ".txt");
+        }
+        for (int i = 0; i < biases.length; i++) {
+            biases[i].exportToFile(directory + "\\biases" + i + ".txt");
         }
     }
 }
