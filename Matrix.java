@@ -1,5 +1,9 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Scanner;
 
 class Matrix {
     private int rows;
@@ -21,6 +25,34 @@ class Matrix {
         }
     }
 
+    Matrix(String fileName) {
+        try {
+            Scanner scanner = new Scanner(new File(fileName));
+            this.rows = Integer.valueOf(scanner.next());
+            this.cols = Integer.valueOf(scanner.next());
+            this.data = new float[rows][cols];
+            for (int r = 0; r < data.length; r++) {
+                for (int c = 0; c < data[0].length; c++) {
+                    data[r][c] = Float.valueOf(scanner.next());
+                }
+            }
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    Matrix(float[][] matrix) {
+        this.rows = matrix.length;
+        this.cols = matrix[0].length;
+        this.data = new float[rows][cols];
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                this.data[r][c] = matrix[r][c];
+            }
+        }
+    }
+
     static Matrix fromArray(float[] arr) {
         Matrix m = new Matrix(arr.length, 1);
         for (int i = 0; i < arr.length; i++) {
@@ -30,7 +62,6 @@ class Matrix {
     }
 
     static Matrix subtract(Matrix a, Matrix b) {
-        // Return a new Matrix a-b
         Matrix result = new Matrix(a.rows, a.cols);
         for (int i = 0; i < result.rows; i++) {
             for (int j = 0; j < result.cols; j++) {
@@ -155,6 +186,42 @@ class Matrix {
             System.out.println(Arrays.toString(this.data[i]));
         }
         System.out.println();
+    }
+
+    void importFromFile(String fileName) {
+        try {
+            Scanner scanner = new Scanner(new File(fileName));
+            int rows = Integer.valueOf(scanner.next());
+            int cols = Integer.valueOf(scanner.next());
+            if (this.rows != rows || this.cols != cols) {
+                System.out.println("ERROR: this.rows != rows || this.cols != cols");
+                return;
+            }
+            for (int r = 0; r < data.length; r++) {
+                for (int c = 0; c < data[0].length; c++) {
+                    data[r][c] = Float.valueOf(scanner.next());
+                }
+            }
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void exportToFile(String fileName) {
+        try {
+            PrintWriter printWriter = new PrintWriter(fileName);
+            printWriter.println(data.length + " " + data[0].length);
+            for (int r = 0; r < data.length; r++) {
+                for (int c = 0; c < data[0].length; c++) {
+                    printWriter.print(data[r][c] + " ");
+                }
+                printWriter.println();
+            }
+            printWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }
 
