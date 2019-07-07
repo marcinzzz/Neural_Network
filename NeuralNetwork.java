@@ -33,6 +33,31 @@ class NeuralNetwork {
         }
     }
 
+    NeuralNetwork(String directory, float learningRate) {
+        this.learningRate = learningRate;
+
+        File dir = new File(directory);
+        File list[] = dir.listFiles();
+
+        if (list != null) {
+            int length = list.length;
+
+            this.weights = new Matrix[length / 2];
+            this.biases = new Matrix[length / 2];
+            this.layers = list.length / 2 - 1;
+
+            for (int i = 0; i < length / 2; i++) {
+                String fileName = dir + "\\" + list[i].getName();
+                biases[i] = new Matrix(fileName);
+            }
+
+            for (int i = length / 2; i < length; i++) {
+                String fileName = dir + "\\" + list[i].getName();
+                weights[i - length / 2] = new Matrix(fileName);
+            }
+        }
+    }
+
     float[] feedForward(float input[]) {
         Matrix inputs = Matrix.fromArray(input);
         Matrix hiddenLayers[] = new Matrix[weights.length - 1];
