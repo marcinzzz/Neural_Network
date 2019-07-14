@@ -6,9 +6,11 @@ class NeuralNetwork {
     private Matrix[] biases;
     private int layers;
     private float learningRate;
+    private Map activationFunctions[];
+    private Map derivativeActivationFunctions[];
 
     static Map SIGMOID = v -> 1 / (float)(1 + Math.exp(-v));
-    static Map DSIGMOID = v -> v * (1 - v);
+    static Map DERIVATIVE_SIGMOID = v -> v * (1 - v);
 
     NeuralNetwork(int inputNodes, int hiddenLayersNodes[], int outputNodes, float learningRate) {
         this.learningRate = learningRate;
@@ -34,10 +36,18 @@ class NeuralNetwork {
             weights[i].randomize();
             biases[i].randomize();
         }
+
+        activationFunctions = new Map[this.layers + 1];
+        derivativeActivationFunctions = new Map[this.layers + 1];
+
+        for (int i = 0; i < activationFunctions.length; i++) {
+            activationFunctions[i] = SIGMOID;
+            derivativeActivationFunctions[i] = DERIVATIVE_SIGMOID;
+        }
     }
 
-    NeuralNetwork(int inputNodes, int hiddenLayersNodes[], int outputNodes, Map activationFunctions[], float learningRate) {
-        if (activationFunctions.length != hiddenLayersNodes.length + 1) {
+    NeuralNetwork(int inputNodes, int hiddenLayersNodes[], int outputNodes, Map activationFunctions[], Map derivativeActivationFunctions[], float learningRate) {
+        if (activationFunctions.length != hiddenLayersNodes.length + 1 || activationFunctions.length != derivativeActivationFunctions.length) {
             System.out.println("ERROR, cannot create neural network");
             return;
         }
@@ -65,6 +75,12 @@ class NeuralNetwork {
             weights[i].randomize();
             biases[i].randomize();
         }
+
+        this.activationFunctions = new Map[this.layers + 1];
+        this.derivativeActivationFunctions = new Map[this.layers + 1];
+
+        System.arraycopy(activationFunctions, 0, this.activationFunctions, 0, activationFunctions.length);
+        System.arraycopy(derivativeActivationFunctions, 0, this.derivativeActivationFunctions, 0, derivativeActivationFunctions.length);
     }
 
     NeuralNetwork(String directory, float learningRate) {
@@ -98,17 +114,17 @@ class NeuralNetwork {
 
         hiddenLayers[0] = Matrix.multiply(weights[0], inputs);
         hiddenLayers[0].add(biases[0]);
-        hiddenLayers[0].map(SIGMOID);
+        hiddenLayers[0].map(activationFunctions[0]);
 
         for (int i = 1; i < layers; i++) {
             hiddenLayers[i] = Matrix.multiply(weights[i], hiddenLayers[i - 1]);
             hiddenLayers[i].add(biases[i]);
-            hiddenLayers[i].map(SIGMOID);
+            hiddenLayers[i].map(activationFunctions[i]);
         }
 
         Matrix output = Matrix.multiply(weights[layers], hiddenLayers[layers - 1]);
         output.add(biases[layers]);
-        output.map(SIGMOID);
+        output.map(activationFunctions[layers]);
 
         return output.toArray();
     }
@@ -123,23 +139,23 @@ class NeuralNetwork {
 
         hiddenLayers[0] = Matrix.multiply(weights[0], inputs);
         hiddenLayers[0].add(biases[0]);
-        hiddenLayers[0].map(SIGMOID);
+        hiddenLayers[0].map(activationFunctions[0]);
 
         for (int i = 1; i < layers; i++) {
             hiddenLayers[i] = Matrix.multiply(weights[i], hiddenLayers[i - 1]);
             hiddenLayers[i].add(biases[i]);
-            hiddenLayers[i].map(SIGMOID);
+            hiddenLayers[i].map(activationFunctions[i]);
         }
 
         Matrix outputs = Matrix.multiply(weights[layers], hiddenLayers[layers - 1]);
         outputs.add(biases[layers]);
-        outputs.map(SIGMOID);
+        outputs.map(activationFunctions[layers]);
 
         Matrix targets = Matrix.fromArray(target);
 
         Matrix outputErrors = Matrix.subtract(targets, outputs);
 
-        Matrix gradients = Matrix.map(outputs, DSIGMOID);
+        Matrix gradients = Matrix.map(outputs, derivativeActivationFunctions[layers]);
         gradients.multiply(outputErrors);
         gradients.multiply(learningRate);
 
@@ -155,7 +171,7 @@ class NeuralNetwork {
             Matrix weightsTransposed = Matrix.transpose(weights[i + 1]);
             Matrix hiddenErrors = Matrix.multiply(weightsTransposed, previousLayerErrors);
 
-            Matrix hiddenGradient = Matrix.map(hiddenLayers[i], DSIGMOID);
+            Matrix hiddenGradient = Matrix.map(hiddenLayers[i], derivativeActivationFunctions[i]);
             hiddenGradient.multiply(hiddenErrors);
             hiddenGradient.multiply(learningRate);
 
