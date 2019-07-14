@@ -10,9 +10,6 @@ class Matrix {
     private int cols;
     private float data[][];
 
-    static Map SIGMOID = v -> 1 / (float)(1 + Math.exp(-v));
-    static Map DSIGMOID = v -> v * (1 - v);
-
     Matrix(int rows, int cols) {
         this.rows = rows;
         this.cols = cols;
@@ -224,4 +221,3 @@ class Matrix {
         }
     }
 }
-
