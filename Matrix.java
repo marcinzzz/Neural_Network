@@ -88,9 +88,7 @@ class Matrix {
         Random random = new Random();
         for (int i = 0; i < this.rows; i++) {
             for (int j = 0; j < this.cols; j++) {
-                this.data[i][j] = random.nextFloat();
-                if (random.nextBoolean())
-                    this.data[i][j] *= -1;
+                this.data[i][j] = random.nextFloat() * 2 - 1;
             }
         }
     }
