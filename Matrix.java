@@ -218,4 +218,13 @@ class Matrix {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < data.length; i++) {
+            result.append(Arrays.toString(data[i]));
+        }
+        return result.toString();
+    }
 }

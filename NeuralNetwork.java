@@ -6,13 +6,13 @@ class NeuralNetwork {
     private Matrix[] biases;
     private int layers;
     private float learningRate;
-    private Map activationFunctions[];
-    private Map derivativeActivationFunctions[];
+    private Map[] activationFunctions;
+    private Map[] derivativeActivationFunctions;
 
     static Map SIGMOID = v -> 1 / (float)(1 + Math.exp(-v));
     static Map DERIVATIVE_SIGMOID = v -> v * (1 - v);
 
-    NeuralNetwork(int inputNodes, int hiddenLayersNodes[], int outputNodes, float learningRate) {
+    NeuralNetwork(int inputNodes, int[] hiddenLayersNodes, int outputNodes, float learningRate) {
         this.learningRate = learningRate;
         this.layers = hiddenLayersNodes.length;
 
@@ -46,7 +46,7 @@ class NeuralNetwork {
         }
     }
 
-    NeuralNetwork(int inputNodes, int hiddenLayersNodes[], int outputNodes, Map activationFunctions[], Map derivativeActivationFunctions[], float learningRate) {
+    NeuralNetwork(int inputNodes, int[] hiddenLayersNodes, int outputNodes, Map[] activationFunctions, Map[] derivativeActivationFunctions, float learningRate) {
         if (activationFunctions.length != hiddenLayersNodes.length + 1 || activationFunctions.length != derivativeActivationFunctions.length) {
             System.out.println("ERROR, cannot create neural network");
             return;
@@ -87,7 +87,7 @@ class NeuralNetwork {
         this.learningRate = learningRate;
 
         File dir = new File(directory);
-        File list[] = dir.listFiles();
+        File[] list = dir.listFiles();
 
         if (list != null) {
             int length = list.length;
@@ -97,20 +97,26 @@ class NeuralNetwork {
             this.layers = list.length / 2 - 1;
 
             for (int i = 0; i < length / 2; i++) {
-                String fileName = dir + "\\" + list[i].getName();
-                biases[i] = new Matrix(fileName);
+                biases[i] = new Matrix(dir + "/biases" + i + ".txt");
             }
 
-            for (int i = length / 2; i < length; i++) {
-                String fileName = dir + "\\" + list[i].getName();
-                weights[i - length / 2] = new Matrix(fileName);
+            for (int i = 0; i < length / 2; i++) {
+                weights[i] = new Matrix(dir + "/weights" + i + ".txt");
             }
+        }
+
+        activationFunctions = new Map[this.layers + 1];
+        derivativeActivationFunctions = new Map[this.layers + 1];
+
+        for (int i = 0; i < activationFunctions.length; i++) {
+            activationFunctions[i] = SIGMOID;
+            derivativeActivationFunctions[i] = DERIVATIVE_SIGMOID;
         }
     }
 
-    float[] feedForward(float input[]) {
+    float[] feedForward(float[] input) {
         Matrix inputs = Matrix.fromArray(input);
-        Matrix hiddenLayers[] = new Matrix[weights.length - 1];
+        Matrix[] hiddenLayers = new Matrix[weights.length - 1];
 
         hiddenLayers[0] = Matrix.multiply(weights[0], inputs);
         hiddenLayers[0].add(biases[0]);
@@ -129,13 +135,13 @@ class NeuralNetwork {
         return output.toArray();
     }
 
-    void printResults(float input[]) {
+    void printResults(float[] input) {
         System.out.println(Arrays.toString(input) + " : " + Arrays.toString(feedForward(input)));
     }
 
-    void train(float input[], float target[]) {
+    void train(float[] input, float[] target) {
         Matrix inputs = Matrix.fromArray(input);
-        Matrix hiddenLayers[] = new Matrix[layers];
+        Matrix[] hiddenLayers = new Matrix[layers];
 
         hiddenLayers[0] = Matrix.multiply(weights[0], inputs);
         hiddenLayers[0].add(biases[0]);
@@ -192,10 +198,10 @@ class NeuralNetwork {
     void export(String directory) {
         new File(directory).mkdir();
         for (int i = 0; i < weights.length; i++) {
-            weights[i].exportToFile(directory + "\\weights" + i + ".txt");
+            weights[i].exportToFile(directory + "/weights" + i + ".txt");
         }
         for (int i = 0; i < biases.length; i++) {
-            biases[i].exportToFile(directory + "\\biases" + i + ".txt");
+            biases[i].exportToFile(directory + "/biases" + i + ".txt");
         }
     }
 }
